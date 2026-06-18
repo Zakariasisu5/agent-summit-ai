@@ -96,9 +96,11 @@ function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen flex-col border-r border-border bg-sidebar/60 px-4 py-6 backdrop-blur-xl md:flex">
       <Link to="/" className="flex items-center gap-2 px-2">
-        <div className="grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary to-accent shadow-glow">
-          <ShieldCheck className="h-4 w-4 text-primary-foreground" />
-        </div>
+        <img 
+          src="/src/assets/icon.webp" 
+          alt="CredLayer" 
+          className="h-7 w-7 rounded-md"
+        />
         <span className="font-display text-base font-semibold">CredLayer</span>
       </Link>
       <nav className="mt-8 flex flex-1 flex-col gap-1">
@@ -153,8 +155,8 @@ function Topbar() {
             </Button>
           </Badge>
         ) : (
-          <Badge variant="outline" className="gap-1 border-success/40 text-success">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
+          <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
             0G Galileo
           </Badge>
         )}

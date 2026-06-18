@@ -75,9 +75,9 @@ function StatCard({
 }) {
   const toneClass = {
     primary: "text-primary",
-    accent: "text-accent",
-    success: "text-success",
-    warning: "text-warning",
+    accent: "text-primary",
+    success: "text-primary",
+    warning: "text-primary",
   }[tone];
   return (
     <div className="glass-panel p-5">

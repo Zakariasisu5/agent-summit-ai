@@ -100,9 +100,11 @@ function Nav() {
 
 function Logo() {
   return (
-    <div className="relative grid h-7 w-7 place-items-center rounded-md bg-gradient-to-br from-primary to-accent shadow-glow">
-      <ShieldCheck className="h-4 w-4 text-primary-foreground" />
-    </div>
+    <img 
+      src="/src/assets/icon.webp" 
+      alt="CredLayer" 
+      className="h-7 w-7 rounded-md"
+    />
   );
 }
 
@@ -121,7 +123,7 @@ function Hero() {
             <Sparkles className="mr-1 h-3 w-3" /> Built on 0G — Storage · Compute · Chain
           </Badge>
           <h1 className="mt-5 text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
-            <span className="text-gradient-brand">Trust Layer</span>
+            <span className="text-primary">Trust Layer</span>
             <br /> for AI Agents and
             <br /> Decentralized Identity
           </h1>
@@ -172,7 +174,7 @@ function TrustOrb() {
       transition={{ duration: 0.8 }}
       className="relative mx-auto flex aspect-square w-full max-w-lg items-center justify-center"
     >
-      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/30 via-transparent to-accent/30 blur-3xl" />
+      <div className="absolute inset-0 rounded-full bg-primary/20 blur-3xl" />
       <div className="relative grid aspect-square w-[78%] place-items-center rounded-full glass-strong">
         <div className="absolute inset-6 rounded-full border border-primary/20" />
         <div className="absolute inset-12 rounded-full border border-primary/15" />
@@ -181,8 +183,8 @@ function TrustOrb() {
           <div className="text-xs uppercase tracking-widest text-muted-foreground">
             Trust Score
           </div>
-          <div className="font-display text-7xl font-semibold text-gradient-brand">847</div>
-          <div className="mt-1 text-xs text-success">Low Risk · 92% confidence</div>
+          <div className="font-display text-7xl font-semibold text-primary">847</div>
+          <div className="mt-1 text-xs text-primary">Low Risk · 92% confidence</div>
         </div>
       </div>
 
@@ -323,7 +325,7 @@ function TrustEngine() {
                   </div>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${r.v}%` }}
                     />
                   </div>
@@ -359,15 +361,10 @@ function Metric({
   value: string;
   tone: "primary" | "accent" | "success";
 }) {
-  const toneClass = {
-    primary: "text-primary",
-    accent: "text-accent",
-    success: "text-success",
-  }[tone];
   return (
     <div className="glass-panel p-3">
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`font-display text-2xl font-semibold ${toneClass}`}>{value}</div>
+      <div className="font-display text-2xl font-semibold text-primary">{value}</div>
     </div>
   );
 }

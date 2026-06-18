@@ -142,7 +142,7 @@ function CredentialsPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Badge variant="outline" className="border-success/40 text-success">
+                  <Badge variant="outline" className="border-primary/40 text-primary">
                     Stored
                   </Badge>
                   <Button

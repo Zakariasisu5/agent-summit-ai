@@ -146,7 +146,7 @@ function PipelineStatus({
             className={[
               "grid h-7 w-7 place-items-center rounded-md",
               s.done
-                ? "bg-success/20 text-success"
+                ? "bg-primary/20 text-primary"
                 : pending
                   ? "bg-primary/20 text-primary"
                   : "bg-muted text-muted-foreground",
@@ -181,9 +181,9 @@ function ReportView({ result }: { result: AnalyzeResult }) {
             variant="outline"
             className={
               r.riskLevel === "low"
-                ? "border-success/40 text-success"
+                ? "border-primary/40 text-primary"
                 : r.riskLevel === "medium"
-                  ? "border-warning/40 text-warning"
+                  ? "border-primary/40 text-primary"
                   : "border-destructive/40 text-destructive"
             }
           >
@@ -226,7 +226,7 @@ function ReportView({ result }: { result: AnalyzeResult }) {
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                  className="h-full rounded-full bg-primary"
                   style={{ width: `${Math.max(0, Math.min(100, s.weight))}%` }}
                 />
               </div>
