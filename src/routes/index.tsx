@@ -27,6 +27,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import logoIcon from "../assets/icon.webp";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -101,7 +102,7 @@ function Nav() {
 function Logo() {
   return (
     <img 
-      src="/src/assets/icon.webp" 
+      src={logoIcon} 
       alt="CredLayer" 
       className="h-7 w-7 rounded-md"
     />

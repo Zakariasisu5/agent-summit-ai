@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ZG_CHAIN_ID } from "@/lib/zg-chain";
+import logoIcon from "../assets/icon.webp";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -97,7 +98,7 @@ function Sidebar() {
     <aside className="sticky top-0 hidden h-screen flex-col border-r border-border bg-sidebar/60 px-4 py-6 backdrop-blur-xl md:flex">
       <Link to="/" className="flex items-center gap-2 px-2">
         <img 
-          src="/src/assets/icon.webp" 
+          src={logoIcon} 
           alt="CredLayer" 
           className="h-7 w-7 rounded-md"
         />
