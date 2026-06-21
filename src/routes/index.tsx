@@ -146,7 +146,7 @@ function Hero() {
             </Button>
           </div>
           <div className="mt-8 grid max-w-md grid-cols-3 gap-3 text-xs text-muted-foreground">
-            <Stat label="Chain ID" value="16601" />
+            <Stat label="Chain ID" value="16602" />
             <Stat label="Network" value="Galileo" />
             <Stat label="Stack" value="0G full" />
           </div>

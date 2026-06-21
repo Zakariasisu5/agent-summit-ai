@@ -57,7 +57,12 @@ IdentityRegistry.sol      // DID anchoring and profile management
 CredentialRegistry.sol    // Document hash verification
 ```
 
-**Chain ID**: 16601  
+**Deployed Contracts:**
+- **IdentityRegistry**: `0xfF0c704F720D631dB7Cc70645fb9b596C2a093e7`
+- **ReputationRegistry**: `0x6AF03aAc6CB8339AE1486c7B6D2Dd72e8FB3a397`
+- **CredentialRegistry**: `0x1Bda18E14bDB064261044412e324be513A8A3f41`
+
+**Chain ID**: 16602  
 **Explorer**: [chainscan-galileo.0g.ai](https://chainscan-galileo.0g.ai)
 
 ### Tech Stack
