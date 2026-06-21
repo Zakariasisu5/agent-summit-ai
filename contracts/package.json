@@ -1,0 +1,19 @@
+{
+  "name": "credlayer-contracts",
+  "version": "1.0.0",
+  "description": "CredLayer Smart Contracts for 0G Chain",
+  "scripts": {
+    "deploy": "hardhat run scripts/deploy.js --network zgGalileo",
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "clean": "hardhat clean"
+  },
+  "keywords": ["0g", "blockchain", "smart-contracts", "credlayer"],
+  "author": "CredLayer Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.3.1"
+  }
+}

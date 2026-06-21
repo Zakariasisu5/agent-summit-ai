@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
 import { toast } from "sonner";
 import { FileCheck2, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,15 @@ function CredentialsPage() {
 
   const { writeContractAsync, isPending: isAnchoring } = useWriteContract();
 
+  // Fetch on-chain credential count
+  const { data: credentialCount } = useReadContract({
+    abi: CredentialRegistryABI,
+    address: CONTRACT_ADDRESSES.credential || undefined,
+    functionName: "credentialCount",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address && !!CONTRACT_ADDRESSES.credential },
+  });
+
   const mut = useMutation({
     mutationFn: async (f: File) => {
       const b = new Uint8Array(await f.arrayBuffer());
@@ -45,7 +54,7 @@ function CredentialsPage() {
 
   async function anchor(c: CredentialUpload) {
     if (!CONTRACT_ADDRESSES.credential) {
-      toast.error("CredentialRegistry not configured");
+      toast.error("CredentialRegistry not available");
       return;
     }
     try {
@@ -55,7 +64,7 @@ function CredentialsPage() {
         functionName: "registerCredential",
         args: [c.credentialHash, c.storageURI],
       });
-      toast.success("Anchored on 0G Chain", { description: tx });
+      toast.success("Anchored on 0G Chain", { description: `Tx: ${tx.slice(0, 20)}...` });
     } catch (e: any) {
       toast.error("Anchor failed", { description: e?.shortMessage ?? e?.message });
     }
@@ -104,9 +113,14 @@ function CredentialsPage() {
       <section className="glass-panel p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">Your credentials</h2>
-          <Badge variant="outline" className="text-xs">
-            Stored on 0G Storage
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              {credentialCount ? `${credentialCount} on-chain` : "0 on-chain"}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {items.length} uploaded
+            </Badge>
+          </div>
         </div>
 
         {!items.length ? (

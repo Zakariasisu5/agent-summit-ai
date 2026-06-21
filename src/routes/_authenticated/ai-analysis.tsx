@@ -72,9 +72,9 @@ function AnalysisPage() {
           AI Trust Analysis
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Submit a wallet address. We pull live on-chain activity from 0G Chain, run an
-          AI inference job on 0G Compute, persist the full report on 0G Storage, and
-          anchor the score in ReputationRegistry.
+          Submit a wallet address. We pull live on-chain activity from 0G Chain, run
+          AI inference on 0G Compute, store the report on 0G Storage, and anchor the
+          score in ReputationRegistry.
         </p>
       </header>
 

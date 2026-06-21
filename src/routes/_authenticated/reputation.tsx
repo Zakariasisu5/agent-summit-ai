@@ -28,17 +28,11 @@ function ReputationPage() {
       <header>
         <h1 className="font-display text-3xl font-semibold tracking-tight">Reputation</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          The latest AI-generated trust score for your wallet, read directly from
-          ReputationRegistry on 0G Chain.
+          Your AI-generated trust score, read directly from ReputationRegistry on 0G Chain.
         </p>
       </header>
 
-      {!CONTRACT_ADDRESSES.reputation ? (
-        <div className="glass-panel p-10 text-center text-sm text-muted-foreground">
-          ReputationRegistry contract is not deployed yet. Set{" "}
-          <code className="font-mono">NEXT_PUBLIC_CONTRACT_REPUTATION</code> after deployment.
-        </div>
-      ) : isLoading ? (
+      {isLoading ? (
         <div className="glass-panel h-64 animate-pulse" />
       ) : error ? (
         <div className="glass-panel p-6 text-sm text-destructive">
@@ -48,26 +42,33 @@ function ReputationPage() {
         <div className="grid gap-4 md:grid-cols-3">
           <div className="glass-strong col-span-1 p-6 text-center">
             <Gauge className="mx-auto h-6 w-6 text-primary" />
-            <div className="mt-3 font-display text-6xl font-semibold text-gradient-brand">
-              {score || "—"}
+            <div className="mt-3 font-display text-6xl font-semibold text-primary">
+              {score || "0"}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
-              out of 1000 · {score >= 700 ? "Low risk" : score >= 400 ? "Medium" : score ? "High" : "No score"}
+              out of 1000 · {score >= 700 ? "Low risk" : score >= 400 ? "Medium" : score > 0 ? "High" : "No score yet"}
             </div>
           </div>
 
           <div className="glass-panel md:col-span-2 space-y-3 p-6 text-sm">
             <Row label="Updated">
-              {updatedAt ? new Date(updatedAt * 1000).toLocaleString() : "—"}
+              {updatedAt ? new Date(updatedAt * 1000).toLocaleString() : "Never"}
             </Row>
             <Row label="Report hash">
-              <code className="break-all font-mono text-xs">{reportHash || "—"}</code>
+              <code className="break-all font-mono text-xs">{reportHash || "N/A"}</code>
             </Row>
             <Row label="Storage URI">
-              <code className="break-all font-mono text-xs">{storageURI || "—"}</code>
+              <code className="break-all font-mono text-xs">{storageURI || "N/A"}</code>
             </Row>
             <Row label="Contract">
-              <code className="break-all font-mono text-xs">{CONTRACT_ADDRESSES.reputation}</code>
+              <a 
+                href={`https://chainscan-galileo.0g.ai/address/${CONTRACT_ADDRESSES.reputation}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="break-all font-mono text-xs text-primary hover:underline"
+              >
+                {CONTRACT_ADDRESSES.reputation}
+              </a>
             </Row>
           </div>
         </div>

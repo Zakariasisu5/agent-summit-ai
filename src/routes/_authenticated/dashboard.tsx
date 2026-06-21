@@ -102,26 +102,18 @@ function TrustScoreCard({ address }: { address?: `0x${string}` }) {
     args: address ? [address] : undefined,
     query: { enabled },
   });
-  if (!CONTRACT_ADDRESSES.reputation) {
-    return (
-      <StatCard
-        icon={Gauge}
-        label="Trust Score"
-        value="—"
-        sub="ReputationRegistry not deployed"
-      />
-    );
-  }
+
   if (isLoading) return <StatCard icon={Gauge} label="Trust Score" value="…" />;
   if (error)
-    return <StatCard icon={Gauge} label="Trust Score" value="!" sub="Read failed" tone="warning" />;
+    return <StatCard icon={Gauge} label="Trust Score" value="0" sub="Unable to read contract" tone="warning" />;
+  
   const score = data ? Number((data as any)[0]) : 0;
   return (
     <StatCard
       icon={Gauge}
       label="Trust Score"
-      value={score || "—"}
-      sub={score ? "on-chain · ReputationRegistry" : "No analysis yet"}
+      value={score || "0"}
+      sub={score ? "Live from ReputationRegistry" : "No score yet • Run AI Analysis"}
     />
   );
 }
@@ -135,17 +127,7 @@ function VerificationStatusCard({ address }: { address?: `0x${string}` }) {
     args: address ? [address] : undefined,
     query: { enabled },
   });
-  if (!CONTRACT_ADDRESSES.reputation) {
-    return (
-      <StatCard
-        icon={ShieldCheck}
-        label="Verification"
-        value="Pending"
-        sub="Awaiting contract deployment"
-        tone="warning"
-      />
-    );
-  }
+
   const verified = data && Number((data as any)[0]) > 0;
   return (
     <StatCard
@@ -153,7 +135,7 @@ function VerificationStatusCard({ address }: { address?: `0x${string}` }) {
       label="Verification"
       value={isLoading ? "…" : verified ? "Verified" : "Unverified"}
       sub={verified ? "Score anchored on 0G Chain" : "Run AI Analysis to verify"}
-      tone={verified ? "success" : "warning"}
+      tone={verified ? "primary" : "warning"}
     />
   );
 }
@@ -167,23 +149,14 @@ function CredentialCountCard({ address }: { address?: `0x${string}` }) {
     args: address ? [address] : undefined,
     query: { enabled },
   });
-  if (!CONTRACT_ADDRESSES.credential) {
-    return (
-      <StatCard
-        icon={FileCheck2}
-        label="Credentials"
-        value="—"
-        sub="CredentialRegistry not deployed"
-      />
-    );
-  }
+
   return (
     <StatCard
       icon={FileCheck2}
       label="Credentials"
       value={isLoading ? "…" : String(data ?? 0)}
       sub="Anchored on 0G Chain"
-      tone="accent"
+      tone="primary"
     />
   );
 }
@@ -237,13 +210,7 @@ function TrustTrend({ address }: { address?: `0x${string}` }) {
         </div>
       </div>
 
-      {!CONTRACT_ADDRESSES.reputation ? (
-        <EmptyState
-          icon={Database}
-          title="Contract not configured"
-          body="Set NEXT_PUBLIC_CONTRACT_REPUTATION to start reading on-chain history."
-        />
-      ) : isLoading ? (
+      {isLoading ? (
         <div className="h-64 animate-pulse rounded-lg bg-muted/40" />
       ) : error ? (
         <EmptyState
