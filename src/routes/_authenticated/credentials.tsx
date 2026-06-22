@@ -133,7 +133,7 @@ function CredentialsPage() {
             {items.map((c) => (
               <div
                 key={c.rootHash}
-                className="grid gap-3 rounded-md border border-border bg-card/40 p-4 text-sm md:grid-cols-[1fr_auto]"
+                className="grid gap-3 rounded-md border border-border bg-card/40 p-3 text-sm sm:p-4 md:grid-cols-[1fr_auto]"
               >
                 <div className="space-y-1">
                   <div className="font-medium">{c.filename}</div>

@@ -40,9 +40,9 @@ function ReputationPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="glass-strong col-span-1 p-6 text-center">
+          <div className="glass-strong col-span-full p-6 text-center md:col-span-1">
             <Gauge className="mx-auto h-6 w-6 text-primary" />
-            <div className="mt-3 font-display text-6xl font-semibold text-primary">
+            <div className="mt-3 font-display text-5xl font-semibold text-primary sm:text-6xl">
               {score || "0"}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">
@@ -50,7 +50,7 @@ function ReputationPage() {
             </div>
           </div>
 
-          <div className="glass-panel md:col-span-2 space-y-3 p-6 text-sm">
+          <div className="glass-panel col-span-full space-y-3 p-4 text-sm sm:p-6 md:col-span-2">
             <Row label="Updated">
               {updatedAt ? new Date(updatedAt * 1000).toLocaleString() : "Never"}
             </Row>
@@ -79,9 +79,9 @@ function ReputationPage() {
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[140px_1fr] items-start gap-3 border-b border-border/60 pb-3 last:border-0">
+    <div className="grid grid-cols-1 items-start gap-2 border-b border-border/60 pb-3 last:border-0 sm:grid-cols-[140px_1fr] sm:gap-3">
       <div className="text-xs uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div>{children}</div>
+      <div className="break-words">{children}</div>
     </div>
   );
 }

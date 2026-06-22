@@ -143,30 +143,34 @@ function Topbar() {
     <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/60 px-4 py-3 backdrop-blur-xl md:px-8">
       <div className="flex items-center gap-2">
         {wrongNetwork ? (
-          <Badge variant="destructive" className="gap-1">
-            Wrong network
+          <Badge variant="destructive" className="gap-1 text-xs">
+            <span className="hidden sm:inline">Wrong network</span>
+            <span className="sm:hidden">Wrong net</span>
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 px-2 text-xs"
+              className="h-5 px-1 text-xs sm:h-6 sm:px-2"
               disabled={isPending}
               onClick={() => switchChain({ chainId: ZG_CHAIN_ID })}
             >
-              Switch to 0G
+              Switch
             </Button>
           </Badge>
         ) : (
-          <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+          <Badge variant="outline" className="gap-1 border-primary/40 text-xs text-primary">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-            0G Galileo
+            <span className="hidden sm:inline">0G Galileo</span>
+            <span className="sm:hidden">0G</span>
           </Badge>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" aria-label="Notifications">
+      <div className="flex items-center gap-1 sm:gap-2">
+        <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" aria-label="Notifications">
           <Bell className="h-4 w-4" />
         </Button>
-        <ConnectButton showBalance={false} accountStatus="address" chainStatus="none" />
+        <div className="scale-90 sm:scale-100">
+          <ConnectButton showBalance={false} accountStatus="address" chainStatus="none" />
+        </div>
       </div>
     </header>
   );

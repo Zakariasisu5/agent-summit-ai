@@ -168,12 +168,12 @@ function PipelineStatus({
 function ReportView({ result }: { result: AnalyzeResult }) {
   const r = result.report;
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      <div className="glass-strong p-6 text-center">
+    <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+      <div className="glass-strong p-4 text-center sm:p-6">
         <div className="text-xs uppercase tracking-widest text-muted-foreground">
           Trust Score
         </div>
-        <div className="mt-2 font-display text-6xl font-semibold text-gradient-brand">
+        <div className="mt-2 font-display text-5xl font-semibold text-gradient-brand sm:text-6xl">
           {r.trustScore}
         </div>
         <div className="mt-1 text-sm">
@@ -195,7 +195,7 @@ function ReportView({ result }: { result: AnalyzeResult }) {
         </div>
       </div>
 
-      <div className="glass-panel p-6 lg:col-span-2">
+      <div className="glass-panel p-4 sm:p-6 lg:col-span-2">
         <h3 className="font-semibold">AI summary</h3>
         <p className="mt-2 text-sm text-muted-foreground">{r.summary}</p>
         {r.recommendations?.length > 0 && (
@@ -236,9 +236,9 @@ function ReportView({ result }: { result: AnalyzeResult }) {
         </div>
       </div>
 
-      <div className="glass-panel p-6 lg:col-span-3">
+      <div className="glass-panel p-4 sm:p-6 lg:col-span-3">
         <h3 className="font-semibold">Verifiable references</h3>
-        <div className="mt-3 grid gap-3 text-sm md:grid-cols-2">
+        <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <Ref label="0G Compute job">{result.compute.jobId}</Ref>
           <Ref label="Compute provider">{result.compute.provider}</Ref>
           <Ref label="Model">{result.compute.model}</Ref>

@@ -123,12 +123,12 @@ function Hero() {
           <Badge variant="outline" className="w-fit border-primary/30 text-primary/90">
             <Sparkles className="mr-1 h-3 w-3" /> Built on 0G — Storage · Compute · Chain
           </Badge>
-          <h1 className="mt-5 text-5xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
+          <h1 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
             <span className="text-primary">Trust Layer</span>
             <br /> for AI Agents and
             <br /> Decentralized Identity
           </h1>
-          <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+          <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
             Build verifiable reputation, trust scores, and credentials powered by AI and
             0G infrastructure. Every score is signed by an AI model on 0G Compute, the
             report lives on 0G Storage, and the result is anchored on 0G Chain.
@@ -300,8 +300,8 @@ function TrustEngine() {
   ];
   return (
     <Section id="engine" eyebrow="AI Trust Engine" title="An inference pipeline you can audit">
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="glass-strong relative overflow-hidden p-8">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
+        <div className="glass-strong relative overflow-hidden p-6 sm:p-8">
           <div className="bg-grid pointer-events-none absolute inset-0 opacity-40" />
           <div className="relative">
             <div className="text-xs uppercase tracking-widest text-muted-foreground">
