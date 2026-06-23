@@ -1,11 +1,6 @@
-import { connectorsForWallets, getDefaultConfig } from "@rainbow-me/rainbowkit";
-import {
-  injectedWallet,
-  metaMaskWallet,
-  rainbowWallet,
-  coinbaseWallet,
-} from "@rainbow-me/rainbowkit/wallets";
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { createConfig, http } from "wagmi";
+import { injected, coinbaseWallet } from "wagmi/connectors";
 import { zgGalileo } from "./zg-chain";
 
 const WC_PROJECT_ID =
@@ -27,13 +22,8 @@ export const wagmiConfig = WC_PROJECT_ID
       chains: [zgGalileo],
       ssr: true,
       transports: { [zgGalileo.id]: http() },
-      connectors: connectorsForWallets(
-        [
-          {
-            groupName: "Popular",
-            wallets: [injectedWallet, metaMaskWallet, rainbowWallet, coinbaseWallet],
-          },
-        ],
-        { appName: "CredLayer", projectId: "" },
-      ),
+      connectors: [
+        injected(),
+        coinbaseWallet({ appName: "CredLayer" }),
+      ],
     });
