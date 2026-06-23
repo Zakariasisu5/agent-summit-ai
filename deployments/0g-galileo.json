@@ -1,0 +1,45 @@
+{
+  "network": "0G Galileo Testnet",
+  "chainId": 16602,
+  "rpcUrl": "https://evmrpc-testnet.0g.ai",
+  "explorer": "https://chainscan-galileo.0g.ai",
+  "deployer": "0x6264F847c7D6A4916619e85267e429db4c5E337c",
+  "deployedAt": "2026-06-23T00:00:00.000Z",
+  "contracts": {
+    "IdentityRegistry": {
+      "address": "0xfF0c704F720D631dB7Cc70645fb9b596C2a093e7",
+      "txHash": "0x7cd1bc07000000000000000000000000000000000000000000000000000039d4",
+      "source": "services/contracts/src/IdentityRegistry.sol",
+      "abi": "src/contracts/abis/IdentityRegistry.json",
+      "constructorArgs": [],
+      "initialized": true,
+      "notes": "Stateless on deploy. No initialize() call required."
+    },
+    "ReputationRegistry": {
+      "address": "0x6AF03aAc6CB8339AE1486c7B6D2Dd72e8FB3a397",
+      "txHash": "0xd8b9d9110000000000000000000000000000000000000000000000000000b49f",
+      "source": "services/contracts/src/ReputationRegistry.sol",
+      "abi": "src/contracts/abis/ReputationRegistry.json",
+      "constructorArgs": [],
+      "initialized": true,
+      "notes": "Self-write only on testnet (msg.sender must == user)."
+    },
+    "CredentialRegistry": {
+      "address": "0x1Bda18E14bDB064261044412e324be513A8A3f41",
+      "txHash": "0x21655eb6000000000000000000000000000000000000000000000000000000333c",
+      "source": "services/contracts/src/CredentialRegistry.sol",
+      "abi": "src/contracts/abis/CredentialRegistry.json",
+      "constructorArgs": [],
+      "initialized": true,
+      "notes": "Append-only per owner. Duplicate hashes revert."
+    }
+  },
+  "envWired": [
+    "NEXT_PUBLIC_CONTRACT_IDENTITY",
+    "NEXT_PUBLIC_CONTRACT_REPUTATION",
+    "NEXT_PUBLIC_CONTRACT_CREDENTIAL",
+    "VITE_CONTRACT_IDENTITY",
+    "VITE_CONTRACT_REPUTATION",
+    "VITE_CONTRACT_CREDENTIAL"
+  ]
+}
