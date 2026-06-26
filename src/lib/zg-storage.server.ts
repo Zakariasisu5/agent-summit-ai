@@ -10,6 +10,13 @@
 
 import { ethers } from "ethers";
 
+// Polyfill for URL.clone() which is not available in Node.js
+if (typeof URL !== 'undefined' && !URL.prototype.clone) {
+  URL.prototype.clone = function() {
+    return new URL(this.href);
+  };
+}
+
 const ZG_RPC = process.env.NEXT_PUBLIC_0G_RPC_URL || "https://evmrpc-testnet.0g.ai";
 const ZG_INDEXER =
   process.env.NEXT_PUBLIC_0G_STORAGE_INDEXER ||
@@ -55,29 +62,40 @@ export interface UploadResult {
 /** Upload a Buffer/Uint8Array to 0G Storage. Returns the real rootHash. */
 export async function uploadFile(
   data: Uint8Array,
-  _filename: string,
+  filename: string,
 ): Promise<UploadResult> {
   const sdk: any = await loadSdk();
   const signer = getSigner();
   const indexer = new sdk.Indexer(ZG_INDEXER);
 
-  // ZgFile / Blob API differs slightly across SDK versions — try both.
-  const Blob = sdk.Blob ?? sdk.ZgFile;
-  if (!Blob) {
-    throw new ZgStorageError("0G SDK does not expose Blob/ZgFile", "sdk_shape");
+  // Write to temp file first (SDK needs file path in Node.js)
+  const fs = await import("fs/promises");
+  const path = await import("path");
+  const os = await import("os");
+  const tmpDir = os.tmpdir();
+  const tmpFile = path.join(tmpDir, `upload-${Date.now()}-${filename}`);
+  
+  try {
+    await fs.writeFile(tmpFile, Buffer.from(data));
+    
+    // Use file path for upload
+    const [tree, treeErr] = await indexer.upload(tmpFile, 0, ZG_RPC, signer);
+    if (treeErr) {
+      throw new ZgStorageError(`upload failed: ${treeErr}`, "upload_failed");
+    }
+    
+    const rootHash = tree[0];
+    const txHash = tree[1];
+    
+    return { rootHash, txHash, size: data.byteLength };
+  } finally {
+    // Clean up temp file
+    try {
+      await fs.unlink(tmpFile);
+    } catch {
+      // Ignore cleanup errors
+    }
   }
-  const file = new Blob(Buffer.from(data));
-  const [tree, treeErr] = await file.merkleTree();
-  if (treeErr) {
-    throw new ZgStorageError(`merkleTree failed: ${treeErr}`, "merkle_failed");
-  }
-  const rootHash: string = tree.rootHash();
-
-  const [tx, uploadErr] = await indexer.upload(file, ZG_RPC, signer);
-  if (uploadErr) {
-    throw new ZgStorageError(`upload failed: ${uploadErr}`, "upload_failed");
-  }
-  return { rootHash, txHash: tx, size: data.byteLength };
 }
 
 /** Retrieve raw bytes by rootHash. */
@@ -96,11 +114,30 @@ export async function retrieveFile(rootHash: string): Promise<Uint8Array> {
 /** Verify a local payload matches an on-chain root hash. */
 export async function verifyFile(data: Uint8Array, rootHash: string): Promise<boolean> {
   const sdk: any = await loadSdk();
-  const Blob = sdk.Blob ?? sdk.ZgFile;
-  const file = new Blob(Buffer.from(data));
-  const [tree, treeErr] = await file.merkleTree();
-  if (treeErr) throw new ZgStorageError(`merkleTree failed: ${treeErr}`, "merkle_failed");
-  return tree.rootHash().toLowerCase() === rootHash.toLowerCase();
+  const fs = await import("fs/promises");
+  const path = await import("path");
+  const os = await import("os");
+  const tmpDir = os.tmpdir();
+  const tmpFile = path.join(tmpDir, `verify-${Date.now()}.bin`);
+  
+  try {
+    await fs.writeFile(tmpFile, Buffer.from(data));
+    
+    const indexer = new sdk.Indexer(ZG_INDEXER);
+    const [tree, treeErr] = await indexer.upload(tmpFile, 0, ZG_RPC, null);
+    if (treeErr) {
+      throw new ZgStorageError(`merkleTree failed: ${treeErr}`, "merkle_failed");
+    }
+    
+    const computedHash = tree[0];
+    return computedHash.toLowerCase() === rootHash.toLowerCase();
+  } finally {
+    try {
+      await fs.unlink(tmpFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
 }
 
 export function getStorageHash(data: Uint8Array): string {

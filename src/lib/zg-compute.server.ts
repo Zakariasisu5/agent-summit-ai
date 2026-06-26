@@ -9,6 +9,13 @@
  */
 import { ethers } from "ethers";
 
+// Polyfill for URL.clone() which is not available in Node.js
+if (typeof URL !== 'undefined' && !URL.prototype.clone) {
+  URL.prototype.clone = function() {
+    return new URL(this.href);
+  };
+}
+
 const ZG_RPC = process.env.NEXT_PUBLIC_0G_RPC_URL || "https://evmrpc-testnet.0g.ai";
 
 export class ZgComputeError extends Error {
