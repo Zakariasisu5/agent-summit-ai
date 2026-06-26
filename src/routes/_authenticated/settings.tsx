@@ -135,6 +135,23 @@ function SettingsPage() {
             <ExternalLink className="h-3 w-3" />
           </a>
         </Row>
+
+        <div className="border-t border-border pt-4">
+          <Row label="0G Serving Broker">
+            <a
+              href={`${explorerBase}/address/0xa48f01287233509FD694a22Bf840225062E67836`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 font-mono text-xs text-primary hover:underline"
+            >
+              0xa48f01287233509FD694a22Bf840225062E67836
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </Row>
+          <p className="mt-2 text-xs text-muted-foreground">
+            AI compute accounts are registered through the 0G Serving Broker contract.
+          </p>
+        </div>
       </section>
 
       {/* 0G Services Section */}
