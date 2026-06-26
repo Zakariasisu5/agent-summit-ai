@@ -82,19 +82,49 @@ export async function runInference(
   if (!createBroker) {
     throw new ZgComputeError("Broker factory not found in SDK", "sdk_shape");
   }
-  const client = await createBroker(signer);
+  
+  let client;
+  try {
+    client = await createBroker(signer);
+  } catch (e: any) {
+    throw new ZgComputeError(
+      `Failed to create broker client: ${e?.message ?? e}. Your compute wallet may need to be registered with the broker.`,
+      "broker_init_failed",
+    );
+  }
 
   // Discover a provider and target an LLM service.
-  const services = await client.inference.listService();
+  let services;
+  try {
+    services = await client.inference.listService();
+  } catch (e: any) {
+    throw new ZgComputeError(
+      `Failed to list services: ${e?.message ?? e}`,
+      "service_list_failed",
+    );
+  }
+  
   if (!services?.length) {
     throw new ZgComputeError("No 0G Compute services available", "no_services");
   }
+  
   const svc = services[0];
-  const { endpoint, model } = await client.inference.getServiceMetadata(svc.provider);
-  const headers = await client.inference.getRequestHeaders(
-    svc.provider,
-    JSON.stringify(walletData),
-  );
+  let endpoint, model, headers;
+  
+  try {
+    const metadata = await client.inference.getServiceMetadata(svc.provider);
+    endpoint = metadata.endpoint;
+    model = metadata.model;
+    headers = await client.inference.getRequestHeaders(
+      svc.provider,
+      JSON.stringify(walletData),
+    );
+  } catch (e: any) {
+    throw new ZgComputeError(
+      `Failed to get service metadata or headers: ${e?.message ?? e}`,
+      "metadata_failed",
+    );
+  }
 
   const prompt = `You are CredLayer, an AI trust analyst. Given the following on-chain activity for ${wallet}, return STRICT JSON with shape { "trustScore": number 0-1000, "riskLevel": "low"|"medium"|"high", "confidence": number 0-100, "summary": string, "recommendations": string[], "signals": [{"label": string, "weight": number, "rationale": string}] }. Data: ${JSON.stringify(walletData)}`;
 
@@ -108,8 +138,9 @@ export async function runInference(
     }),
   });
   if (!res.ok) {
+    const errorText = await res.text().catch(() => 'unknown');
     throw new ZgComputeError(
-      `Inference endpoint returned ${res.status}`,
+      `Inference endpoint returned ${res.status}: ${errorText}`,
       "inference_failed",
     );
   }
