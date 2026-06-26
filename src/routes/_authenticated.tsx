@@ -8,14 +8,19 @@ import {
   FileCheck2,
   Gauge,
   LayoutDashboard,
+  Menu,
   Settings,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ZG_CHAIN_ID } from "@/lib/zg-chain";
+import { DemoModeToggle } from "@/components/DemoModeToggle";
 import logoIcon from "../assets/icon.webp";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -88,6 +93,7 @@ function Shell() {
           <Outlet />
         </main>
       </div>
+      <DemoModeToggle />
     </div>
   );
 }
@@ -139,9 +145,81 @@ function Topbar() {
   const chainId = useChainId();
   const { switchChain, isPending } = useSwitchChain();
   const wrongNetwork = chainId !== ZG_CHAIN_ID;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/60 px-4 py-3 backdrop-blur-xl md:px-8">
-      <div className="flex items-center gap-2">
+      {/* Mobile Menu */}
+      <div className="flex items-center gap-2 md:hidden">
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <div className="flex h-full flex-col">
+              {/* Mobile Header */}
+              <div className="flex items-center justify-between border-b border-border p-4">
+                <Link to="/" className="flex items-center gap-2">
+                  <img 
+                    src={logoIcon} 
+                    alt="CredLayer" 
+                    className="h-7 w-7 rounded-md"
+                  />
+                  <span className="font-display text-base font-semibold">CredLayer</span>
+                </Link>
+              </div>
+
+              {/* Mobile Navigation */}
+              <nav className="flex-1 space-y-1 p-4">
+                {NAV.map((n) => {
+                  const active = pathname === n.to || pathname.startsWith(n.to + "/");
+                  return (
+                    <Link
+                      key={n.to}
+                      to={n.to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={[
+                        "flex items-center gap-3 rounded-md px-3 py-3 text-sm transition",
+                        active
+                          ? "bg-sidebar-accent text-foreground"
+                          : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                      ].join(" ")}
+                    >
+                      <n.icon className="h-5 w-5" />
+                      {n.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Mobile Footer */}
+              <div className="border-t border-border p-4">
+                <div className="glass-panel p-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-foreground">0G Galileo</span>
+                  </div>
+                  <div className="mt-1">Chain ID {ZG_CHAIN_ID}</div>
+                </div>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <Link to="/" className="md:hidden">
+          <img 
+            src={logoIcon} 
+            alt="CredLayer" 
+            className="h-7 w-7 rounded-md"
+          />
+        </Link>
+      </div>
+
+      {/* Desktop Network Badge */}
+      <div className="hidden items-center gap-2 md:flex">
         {wrongNetwork ? (
           <Badge variant="destructive" className="gap-1 text-xs">
             <span className="hidden sm:inline">Wrong network</span>
@@ -164,6 +242,31 @@ function Topbar() {
           </Badge>
         )}
       </div>
+
+      {/* Mobile Network Badge (smaller) */}
+      <div className="flex items-center gap-2 md:hidden">
+        {wrongNetwork ? (
+          <Badge variant="destructive" className="text-[10px]">
+            Wrong
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-1 h-4 px-1 text-[10px]"
+              disabled={isPending}
+              onClick={() => switchChain({ chainId: ZG_CHAIN_ID })}
+            >
+              Switch
+            </Button>
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="border-primary/40 text-[10px] text-primary">
+            <span className="inline-block h-1 w-1 rounded-full bg-primary" />
+            <span className="ml-1">0G</span>
+          </Badge>
+        )}
+      </div>
+
+      {/* Right Side Actions */}
       <div className="flex items-center gap-1 sm:gap-2">
         <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" aria-label="Notifications">
           <Bell className="h-4 w-4" />
