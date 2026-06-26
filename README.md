@@ -128,7 +128,7 @@ npm run dev
 ### Deploy Smart Contracts
 ```bash
 cd services/contracts
-# Deploy to 0G Galileo testnet (chain ID 16601)
+# Deploy to 0G Galileo testnet (chain ID 16602)
 # Update contract addresses in src/contracts/index.ts
 ```
 

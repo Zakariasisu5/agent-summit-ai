@@ -12,7 +12,7 @@ const RPC_URL =
 const CHAIN_ID = Number(
   import.meta.env.VITE_CHAIN_ID ||
     import.meta.env.NEXT_PUBLIC_CHAIN_ID ||
-    16601,
+    16602,
 );
 
 export const zgGalileo = defineChain({

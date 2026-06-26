@@ -28,7 +28,7 @@ export const analyzeWallet = createServerFn({ method: "POST" })
 
     const walletData = {
       address: wallet,
-      chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 16601),
+      chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 16602),
       balanceWei: balance.toString(),
       transactionCount: txCount,
       observedAtBlock: block,
