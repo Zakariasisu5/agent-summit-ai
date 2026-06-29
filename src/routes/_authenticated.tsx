@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ZG_CHAIN_ID } from "@/lib/zg-chain";
-import { DemoModeToggle } from "@/components/DemoModeToggle";
 import logoIcon from "../assets/icon.webp";
 import { useState } from "react";
 
@@ -93,7 +92,6 @@ function Shell() {
           <Outlet />
         </main>
       </div>
-      <DemoModeToggle />
     </div>
   );
 }
