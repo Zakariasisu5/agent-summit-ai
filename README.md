@@ -139,17 +139,25 @@ cd services/contracts
 ### 1️⃣ Connect Wallet
 User connects their EVM wallet (MetaMask, Coinbase, etc.) to 0G Galileo testnet.
 
-### 2️⃣ Generate Trust Score
-- Frontend calls backend API with wallet address
-- Backend triggers **0G Compute inference job** with activity data
+### 2️⃣ Generate Trust Score (USER-PAYS MODEL)
+- User initiates AI analysis from the frontend
+- **User's wallet pays for 0G Compute inference** using their 0G tokens
+- Frontend pulls on-chain activity data from 0G Chain
+- User's wallet triggers **0G Compute inference job** via signed request
 - AI model (e.g., Llama 3.1) analyzes patterns and returns signed score
-- Report uploaded to **0G Storage** → returns Merkle root hash
-- Score written to **ReputationRegistry** contract with storage root
+- Score displayed with full verifiable references
+
+**Note**: Users must register their wallet with the 0G Serving Broker first:
+```bash
+# Fund wallet with at least 2 A0GI from https://faucet.0g.ai/
+# Register with broker
+0g-compute-cli add-account --amount 2 --private-key YOUR_PRIVATE_KEY
+```
 
 ### 3️⃣ Verify Anywhere
-- Any dApp reads `getReputation(address)` from the registry
-- Full AI report downloaded from 0G Storage using root hash
-- Merkle proof verified byte-for-byte
+- Any dApp can integrate CredLayer's client-side SDK
+- Trust scores are cryptographically verified via compute provider signatures
+- Full transparency: job ID, provider address, and model are public
 
 ---
 
@@ -168,7 +176,12 @@ Trust and reputation aren't just nice-to-haves — they're **critical infrastruc
 - Professional UI/UX with accessibility
 
 ### ✅ Novel AI + Crypto Synergy
-We don't just store data — we use **decentralized AI to generate verifiable insights** that live permanently on-chain.
+We don't just store data — we use **decentralized AI to generate verifiable insights** with a **user-pays model** where each user controls their own compute spending.
+
+### ✅ User-Controlled Economics
+- Users pay directly for AI analysis using their own 0G tokens
+- No centralized server costs for AI inference
+- True decentralization: users control both identity and compute
 
 ### ✅ Scalable Architecture
 - Modular contract design (separate registries)

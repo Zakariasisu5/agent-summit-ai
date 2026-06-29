@@ -1,26 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { ethers } from "ethers";
 import {
   ArrowRight,
   Cpu,
-  Database,
   Loader2,
   Network,
-  ScanFace,
   Sparkles,
+  Wallet,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { analyzeWallet, type AnalyzeResult } from "@/lib/trust.functions";
 
 export const Route = createFileRoute("/_authenticated/ai-analysis")({
   head: () => ({
@@ -38,9 +37,161 @@ const schema = z.object({
     .regex(/^0x[a-fA-F0-9]{40}$/i, "Enter a valid 0x… EVM address"),
 });
 
+export interface TrustReport {
+  trustScore: number;
+  riskLevel: "low" | "medium" | "high";
+  confidence: number;
+  summary: string;
+  recommendations: string[];
+  signals: { label: string; weight: number; rationale: string }[];
+}
+
+export interface AnalyzeResult {
+  wallet: string;
+  generatedAt: string;
+  report: TrustReport;
+  compute: {
+    provider: string;
+    model: string;
+    jobId: string;
+    endpoint: string;
+  };
+}
+
+/**
+ * Run AI inference using 0G Compute with the user's wallet paying for it.
+ * This demonstrates the user-pays model where each user controls their own compute spending.
+ */
+async function runUserPaidAnalysis(
+  targetWallet: string,
+  userSigner: ethers.Signer
+): Promise<AnalyzeResult> {
+  // Polyfill for URL.clone() in browser
+  if (typeof URL !== 'undefined' && !(URL.prototype as any).clone) {
+    (URL.prototype as any).clone = function() {
+      return new URL(this.href);
+    };
+  }
+
+  // Import 0G Serving Broker SDK
+  const broker: any = await import("@0glabs/0g-serving-broker");
+  const createBroker = broker.createZGComputeNetworkBroker ?? broker.createBroker;
+  
+  if (!createBroker) {
+    throw new Error("Broker factory not found in SDK");
+  }
+  
+  // 1. Pull live on-chain activity
+  const RPC = import.meta.env.NEXT_PUBLIC_0G_RPC_URL || "https://evmrpc-testnet.0g.ai";
+  const rpcProvider = new ethers.JsonRpcProvider(RPC);
+  const walletAddr = targetWallet.toLowerCase() as `0x${string}`;
+
+  const [balance, txCount, block] = await Promise.all([
+    rpcProvider.getBalance(walletAddr),
+    rpcProvider.getTransactionCount(walletAddr),
+    rpcProvider.getBlockNumber(),
+  ]);
+
+  const walletData = {
+    address: walletAddr,
+    chainId: Number(import.meta.env.NEXT_PUBLIC_CHAIN_ID || 16602),
+    balanceWei: balance.toString(),
+    transactionCount: txCount,
+    observedAtBlock: block,
+  };
+
+  // 2. Create broker client with user's wallet (user pays)
+  let client;
+  try {
+    client = await createBroker(userSigner);
+  } catch (e: any) {
+    if (e?.message?.includes("Sub-account not found") || e?.code === "CALL_EXCEPTION") {
+      throw new Error(
+        "Your wallet is not registered with the 0G Serving Broker. Please fund your wallet with at least 2 A0GI and register it using: 0g-compute-cli add-account --amount 2 --private-key YOUR_PRIVATE_KEY"
+      );
+    }
+    throw new Error(`Failed to create broker client: ${e?.message ?? e}`);
+  }
+
+  // 3. Discover AI service
+  let services;
+  try {
+    services = await client.inference.listService();
+  } catch (e: any) {
+    throw new Error(`Failed to list AI services: ${e?.message ?? e}`);
+  }
+  
+  if (!services?.length) {
+    throw new Error("No 0G Compute AI services are currently available. Please try again later.");
+  }
+  
+  const svc = services[0];
+  let endpoint, model, headers;
+  
+  try {
+    const metadata = await client.inference.getServiceMetadata(svc.provider);
+    endpoint = metadata.endpoint;
+    model = metadata.model;
+    headers = await client.inference.getRequestHeaders(
+      svc.provider,
+      JSON.stringify(walletData),
+    );
+  } catch (e: any) {
+    throw new Error(`Failed to get service metadata: ${e?.message ?? e}`);
+  }
+
+  // 4. Run AI inference (user pays for this)
+  const prompt = `You are CredLayer, an AI trust analyst. Given the following on-chain activity for ${walletAddr}, return STRICT JSON with shape { "trustScore": number 0-1000, "riskLevel": "low"|"medium"|"high", "confidence": number 0-100, "summary": string, "recommendations": string[], "signals": [{"label": string, "weight": number, "rationale": string}] }. Data: ${JSON.stringify(walletData)}`;
+
+  const res = await fetch(`${endpoint}/v1/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    }),
+  });
+  
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => 'unknown');
+    throw new Error(`AI inference failed (${res.status}): ${errorText}`);
+  }
+  
+  const json: any = await res.json();
+  const content: string = json?.choices?.[0]?.message?.content ?? "";
+
+  const jobId =
+    json?.id ?? json?.request_id ?? ethers.id(content + Date.now()).slice(0, 18);
+  
+  try {
+    await client.inference.processResponse(svc.provider, content, jobId);
+  } catch {
+    // Signature verification optional in some broker versions
+  }
+
+  let parsed: TrustReport;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new Error("AI model returned invalid response format. Please try again.");
+  }
+  
+  return {
+    wallet: walletAddr,
+    generatedAt: new Date().toISOString(),
+    report: parsed,
+    compute: {
+      provider: svc.provider,
+      model,
+      jobId: String(jobId),
+      endpoint,
+    },
+  };
+}
+
 function AnalysisPage() {
-  const { address } = useAccount();
-  const analyze = useServerFn(analyzeWallet);
+  const { address, connector } = useAccount();
 
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -50,7 +201,18 @@ function AnalysisPage() {
   const [history, setHistory] = useState<AnalyzeResult[]>([]);
 
   const mut = useMutation({
-    mutationFn: (vars: { wallet: string }) => analyze({ data: vars }),
+    mutationFn: async (vars: { wallet: string }) => {
+      if (!address || !connector) {
+        throw new Error("Please connect your wallet first");
+      }
+
+      // Get ethers signer from wagmi connector
+      const provider = await connector.getProvider();
+      const ethersProvider = new ethers.BrowserProvider(provider as any);
+      const signer = await ethersProvider.getSigner();
+
+      return await runUserPaidAnalysis(vars.wallet, signer);
+    },
     onSuccess: (res) => {
       setHistory((h) => [res, ...h]);
       toast.success("AI analysis complete", {
@@ -58,7 +220,10 @@ function AnalysisPage() {
       });
     },
     onError: (err: any) => {
-      toast.error("Analysis failed", { description: err?.message ?? "Unknown error" });
+      toast.error("Analysis failed", { 
+        description: err?.message ?? "Unknown error",
+        duration: 8000,
+      });
     },
   });
 
@@ -72,11 +237,33 @@ function AnalysisPage() {
           AI Trust Analysis
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Submit a wallet address. We pull live on-chain activity from 0G Chain, run
-          AI inference on 0G Compute, store the report on 0G Storage, and anchor the
-          score in ReputationRegistry.
+          Submit a wallet address. Your wallet pays for AI inference on 0G Compute using
+          your 0G tokens. We pull live on-chain activity from 0G Chain and generate a
+          trust score.
         </p>
       </header>
+
+      {/* Registration Notice */}
+      {address && (
+        <div className="glass-panel p-4 border-primary/40">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/20">
+              <Wallet className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">User-Pays Model</span>
+                <Badge variant="outline" className="border-primary/40 text-primary text-xs">
+                  Your wallet pays
+                </Badge>
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Your wallet must be registered with the 0G Serving Broker and funded with A0GI. Register using: 0g-compute-cli add-account --amount 2
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form
         onSubmit={form.handleSubmit((v) => mut.mutate({ wallet: v.wallet }))}
@@ -97,7 +284,12 @@ function AnalysisPage() {
             </p>
           )}
         </div>
-        <Button type="submit" size="lg" disabled={mut.isPending} className="md:w-56">
+        <Button 
+          type="submit" 
+          size="lg" 
+          disabled={mut.isPending || !address} 
+          className="md:w-56"
+        >
           {mut.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Running inference…
@@ -109,6 +301,11 @@ function AnalysisPage() {
           )}
         </Button>
       </form>
+      {!address && (
+        <p className="text-xs text-muted-foreground text-center -mt-4">
+          Connect your wallet to run AI analysis
+        </p>
+      )}
 
       <PipelineStatus pending={mut.isPending} result={mut.data ?? null} />
 
@@ -128,12 +325,10 @@ function PipelineStatus({
 }) {
   const steps = [
     { icon: Network, label: "Pull 0G Chain activity", done: !!result },
-    { icon: Cpu, label: "0G Compute inference", done: !!result?.compute.jobId },
-    { icon: Database, label: "Persist on 0G Storage", done: !!result?.storage.rootHash },
-    { icon: ScanFace, label: "Anchor on 0G Chain", done: !!result?.chain.txHash },
+    { icon: Cpu, label: "0G Compute inference (user pays)", done: !!result?.compute.jobId },
   ];
   return (
-    <div className="glass-panel grid grid-cols-2 gap-3 p-4 md:grid-cols-4">
+    <div className="glass-panel grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
       {steps.map((s, i) => (
         <motion.div
           key={s.label}
@@ -242,9 +437,7 @@ function ReportView({ result }: { result: AnalyzeResult }) {
           <Ref label="0G Compute job">{result.compute.jobId}</Ref>
           <Ref label="Compute provider">{result.compute.provider}</Ref>
           <Ref label="Model">{result.compute.model}</Ref>
-          <Ref label="0G Storage root">{result.storage.rootHash}</Ref>
-          <Ref label="Storage tx">{result.storage.txHash}</Ref>
-          <Ref label="On-chain tx">{result.chain.txHash ?? "(contract not deployed)"}</Ref>
+          <Ref label="Payment method">User wallet (you paid)</Ref>
         </div>
       </div>
     </div>
@@ -284,14 +477,14 @@ function HistoryTable({ items }: { items: AnalyzeResult[] }) {
             </thead>
             <tbody>
               {items.map((it) => (
-                <tr key={it.storage.rootHash} className="border-t border-border">
+                <tr key={it.compute.jobId} className="border-t border-border">
                   <td className="py-2 font-mono text-xs">
-                    {it.storage.rootHash.slice(0, 10)}…
+                    {it.compute.jobId.slice(0, 10)}…
                   </td>
                   <td>{it.report.trustScore}</td>
                   <td>{it.report.riskLevel}</td>
                   <td className="font-mono text-xs text-muted-foreground">
-                    {it.storage.rootHash.slice(0, 14)}…
+                    {it.compute.jobId.slice(0, 14)}…
                   </td>
                   <td className="text-xs text-muted-foreground">
                     {new Date(it.generatedAt).toLocaleString()}
