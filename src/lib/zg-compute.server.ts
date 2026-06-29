@@ -10,7 +10,9 @@
 import { ethers } from "ethers";
 
 // Polyfill for URL.clone() which is not available in Node.js
-if (typeof URL !== 'undefined' && !URL.prototype.clone) {
+// @ts-ignore - Adding polyfill to URL prototype
+if (typeof URL !== 'undefined' && !(URL.prototype as any).clone) {
+  // @ts-ignore
   URL.prototype.clone = function() {
     return new URL(this.href);
   };
