@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "broker:check": "node scripts/check-broker-balance.mjs",
-    "broker:init": "node scripts/init-broker-account.mjs"
+    "broker:init": "node scripts/init-broker-account.mjs",
+    "test:ai": "tsx scripts/test-ai-analysis.mjs"
   },
   "dependencies": {
     "@0glabs/0g-serving-broker": "^0.7.8",
