@@ -2,6 +2,23 @@
  * Polyfills for 0G SDK compatibility in both browser and server environments
  */
 
+// Polyfill for 'global' object (required by 0G SDK)
+// The SDK expects 'global' to be defined, but modern environments use 'globalThis'
+(function applyGlobalPolyfill() {
+  if (typeof globalThis !== 'undefined') {
+    if (typeof (globalThis as any).global === 'undefined') {
+      (globalThis as any).global = globalThis;
+      console.log('[Polyfills] global polyfill applied (globalThis)');
+    }
+  }
+  
+  // Also for window environment (browser)
+  if (typeof window !== 'undefined' && typeof (window as any).global === 'undefined') {
+    (window as any).global = window;
+    console.log('[Polyfills] global polyfill applied (window)');
+  }
+})();
+
 // More aggressive URL.clone() polyfill for 0G SDK
 // The SDK uses url.clone() internally which doesn't exist in standard Web API
 (function applyUrlPolyfill() {
@@ -65,32 +82,30 @@
     }
   }
   
-  console.log('[Polyfills] URL.clone() polyfill applied successfully');
+  console.log('[Polyfills] URL.clone() polyfill applied');
 })();
-
-// Polyfill for global object (required by 0G Serving Broker SDK)
-// The SDK expects 'global' to be defined, but modern environments use 'globalThis'
-if (typeof globalThis !== 'undefined') {
-  if (typeof (globalThis as any).global === 'undefined') {
-    (globalThis as any).global = globalThis;
-  }
-}
-
-// Additional polyfill for window environment (browser)
-if (typeof window !== 'undefined' && typeof (window as any).global === 'undefined') {
-  (window as any).global = window;
-}
 
 // Log that polyfills are loaded (helpful for debugging)
 if (typeof console !== 'undefined' && console.log) {
   console.log('[Polyfills] 0G SDK compatibility polyfills loaded');
+  
+  // Test global polyfill
+  try {
+    if (typeof (globalThis as any).global !== 'undefined') {
+      console.log('[Polyfills] ✅ global is available');
+    } else {
+      console.error('[Polyfills] ❌ global is NOT available');
+    }
+  } catch (e) {
+    console.error('[Polyfills] ❌ Error checking global:', e);
+  }
+  
   // Test if URL.clone exists
   try {
     const testUrl = new (globalThis as any).URL('https://test.com');
     if (typeof testUrl.clone === 'function') {
       const cloned = testUrl.clone();
       console.log('[Polyfills] ✅ URL.clone() is available and working');
-      console.log(`[Polyfills] Test: ${testUrl.href} -> ${cloned.href}`);
     } else {
       console.error('[Polyfills] ❌ URL.clone() is NOT available after polyfill');
     }
