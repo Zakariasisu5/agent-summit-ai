@@ -10,6 +10,12 @@
   const OriginalURL = globalThis.URL;
   if (!OriginalURL) return;
   
+  // Check if already patched
+  if (OriginalURL.prototype && OriginalURL.prototype.clone) {
+    console.log('[Polyfills] URL.clone() already exists');
+    return;
+  }
+  
   // Create extended URL class with clone method
   class PatchedURL extends OriginalURL {
     constructor(url, base) {
@@ -21,11 +27,14 @@
     }
   }
   
-  // Copy static properties
+  // Copy static properties from original URL
   Object.getOwnPropertyNames(OriginalURL).forEach(prop => {
     if (prop !== 'length' && prop !== 'name' && prop !== 'prototype') {
       try {
-        PatchedURL[prop] = OriginalURL[prop];
+        const descriptor = Object.getOwnPropertyDescriptor(OriginalURL, prop);
+        if (descriptor) {
+          Object.defineProperty(PatchedURL, prop, descriptor);
+        }
       } catch (e) {
         // Ignore non-configurable properties
       }
@@ -33,19 +42,30 @@
   });
   
   // Replace global URL
-  globalThis.URL = PatchedURL;
+  try {
+    Object.defineProperty(globalThis, 'URL', {
+      value: PatchedURL,
+      writable: true,
+      enumerable: false,
+      configurable: true
+    });
+  } catch (e) {
+    // Fallback if defineProperty fails
+    globalThis.URL = PatchedURL;
+  }
   
-  // Also patch prototype for any existing URL instances
+  // Also patch original prototype as fallback
   if (OriginalURL.prototype && !OriginalURL.prototype.clone) {
-    OriginalURL.prototype.clone = function() {
-      return new PatchedURL(this.href);
-    };
+    try {
+      OriginalURL.prototype.clone = function() {
+        return new PatchedURL(this.href);
+      };
+    } catch (e) {
+      console.error('[Polyfills] Failed to patch URL.prototype:', e);
+    }
   }
   
-  // Export for CommonJS environments
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports.URL = PatchedURL;
-  }
+  console.log('[Polyfills] URL.clone() polyfill applied successfully');
 })();
 
 // Polyfill for global object (required by 0G Serving Broker SDK)
@@ -66,13 +86,15 @@ if (typeof console !== 'undefined' && console.log) {
   console.log('[Polyfills] 0G SDK compatibility polyfills loaded');
   // Test if URL.clone exists
   try {
-    const testUrl = new URL('https://test.com');
-    if (typeof (testUrl as any).clone === 'function') {
-      console.log('[Polyfills] ✅ URL.clone() is available');
+    const testUrl = new (globalThis as any).URL('https://test.com');
+    if (typeof testUrl.clone === 'function') {
+      const cloned = testUrl.clone();
+      console.log('[Polyfills] ✅ URL.clone() is available and working');
+      console.log(`[Polyfills] Test: ${testUrl.href} -> ${cloned.href}`);
     } else {
       console.error('[Polyfills] ❌ URL.clone() is NOT available after polyfill');
     }
   } catch (e) {
-    console.error('[Polyfills] Error testing URL.clone():', e);
+    console.error('[Polyfills] ❌ Error testing URL.clone():', e);
   }
 }
